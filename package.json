@@ -1,5 +1,5 @@
 {
-  "name": "upload",
+  "name": "upload-NFT",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "near-api-js": "^0.42.0",
+    "v-uploader": "^1.8.0",
     "vue": "^2.6.11"
   },
   "devDependencies": {
@@ -32,7 +34,9 @@
     "parserOptions": {
       "parser": "babel-eslint"
     },
-    "rules": {}
+    "rules": {
+      "no-unused-vars": "off"
+    }
   },
   "browserslist": [
     "> 1%",
