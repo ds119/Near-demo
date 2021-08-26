@@ -1,17 +1,30 @@
 <template>
   <div id="app">
-    <v-uploader @done="uploadDone" :preview-width="400" :preview-height="300" :button-icon="false"></v-uploader>
+    <div>
+      <div class="single-upload">
+        <div class="image-box">
+          <img :src="uploadImg" width="400" height="200">
+        </div>
+      </div>
+    </div>
 
     <div id="action">
-      <div>
-        <button class="button" @click="requestSignIn">绑定钱包</button>
-        <span>已绑定账户:{{accountId}},账户余额:{{balance}}</span>
+      <div class="flex">
+        <div class="button" @click="requestSignIn">绑定钱包</div>
+        <div class="text">已绑定账户:{{accountId}}</div>
+        <div class="text">账户余额:{{balance}}</div>
       </div>
       <div>
-        <button class="button" @click="getBalance">查看余额</button>
+        <div class="button">上传图片</div>
+        <input type="file" @change="getImgUrl">
       </div>
       <div>
-        <button class="button" @click="viewMeteData">查看mete</button>
+        <div class="button" @click="requestMint">铸造NFT</div>
+      </div>
+      <div>
+        <div class="button" @click="transferNFT">发送NFT</div>
+        <input class="text" type="text">
+        <input class="text" type="text">
       </div>
     </div>
   </div>
@@ -20,7 +33,6 @@
 
 <script>
   import * as nearAPI from 'near-api-js';
-
   export const { connect, keyStores, WalletConnection, utils } = nearAPI;
   export const config = {
     networkId: 'testnet',
@@ -41,6 +53,7 @@
         balance: 0,
         wallet: {},
         contract: {},
+        uploadImg:'https://mms.businesswire.com/media/20210512005215/en/877870/23/near_logo.jpg',
         appKeyPrefix:'"near-api-js:keystore:"'
       };
     },
@@ -63,20 +76,19 @@
         this.near = await connect(config);
         this.wallet = new WalletConnection(this.near, this.appKeyPrefix);
         this.accountId = this.wallet.getAccountId();
-        const account = await this.near.account('ds119.testnet');
-        const detail = await account.getAccountDetails();
-        console.log(detail);
+        this.account = this.wallet.account();
+        // const account = await this.near.account('ds119.testnet');
+        // const detail = await account.getAccountDetails();
+        // console.log(detail);
 
         await this.getBalance();
 
         // 获取合约
-        this.contract = new nearAPI.Contract(this.accountId,this.contractName, {
+        this.contract = new nearAPI.Contract(this.account,'dev-1629830646346-20918778741136', {
           viewMethods: ['nft_metadata'],
-          changeMethods: ['nft_mint'],
-          sender: this.accountId
+          changeMethods: ['new_default_meta','nft_mint','nft_transfer'],
         });
 
-        console.log(this.contract);
         console.log('账户是否登录',this.wallet.isSignedIn());
         console.log('登录账户:',this.wallet.getAccountId());
       },
@@ -97,11 +109,10 @@
         const res = await account.getAccountBalance();
         const balance = Number(utils.format.formatNearAmount(res.total));
         this.balance = balance.toFixed(2);
-        console.log(this.balance);
       },
 
 
-      // 查看NFT
+      // 查看MeteData
       async viewMeteData () {
         const response = await this.contract.nft_metadata();
         console.log(response);
@@ -110,10 +121,15 @@
 
       // 铸造NFT
       async requestMint(){
-        // await this.contract.new_default_meta(this.accountId);
-        await this.contract.nft_mint(
+
+        // 初始化合约
+        // await this.contract.new_default_meta({
+        //   owner_id: this.accountId
+        // });
+
+        const res = await this.contract.nft_mint(
                 {
-                  token_id: '0',
+                  token_id: '1',
                   token_owner_id: 'dev-1629830646346-20918778741136',
                   token_metadata:
                           {
@@ -121,23 +137,32 @@
                             description: '测试生成一个NFT',
                             copies: 1
                           }
-                }
-
+                },
+                30000000000000
         );
+        console.log(res);
       },
 
 
       // 传输NFT
-      async transferNFT(){
-
+      async transferNFT () {
+        const res = await this.contract.nft_transfer(
+                {
+                  token_id: '1',
+                  receiver_id: '',
+                  memo: ''
+                },
+                0.000000000000000000000001
+        );
+        console.log(res);
       },
 
-      // 上传图片
-      uploadDone (files) {
-        if (files && Array.isArray(files) && files.length) {
-          console.log(files);
-        }
-      },
+
+      // 上传图片获得本机地址
+      getImgUrl(event){
+        const file = event.target.files[0];
+        this.uploadImg = URL.createObjectURL(file);
+      }
     }
   };
 
@@ -150,11 +175,20 @@
   }
 
   #app{
-    width: 400px;
+    width: 500px;
     height: 300px;
     margin-left:  auto;
     margin-right:  auto;
     margin-top: 10%;
+  }
+
+  .flex{
+    display: flex;
+  }
+
+  .text{
+    padding-top: 10px;
+    margin-left: 20px;
   }
 
   #action{
@@ -163,20 +197,28 @@
     flex-direction: column
   }
 
-
   #action div{
     margin-top: 20px;
     width: auto;
   }
 
-  .button{
-    -webkit-border-radius: 2px;
-    -moz-border-radius: 2px;
+  .single-upload {
+    display: inline-block;
+    margin-right: 5px;
+    text-align: center;
+  }
+
+  .image-box {
     border-radius: 2px;
-    -webkit-box-shadow: 0 0 2px rgba(0,0,0,.12), 0 2px 2px rgba(0,0,0,.2);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #DDDDDD;
+    padding: 5px;
+    margin-bottom: 10px;
+  }
+
+  .button{
+    border-radius: 2px;
     box-shadow: 0 0 2px rgba(0,0,0,.12), 0 2px 2px rgba(0,0,0,.2);
-    -webkit-transition: all .2s ease-in-out;
-    -moz-transition: all .2s ease-in-out;
     transition: all .2s ease-in-out;
     color: #212121;
     background: #fff;
@@ -191,4 +233,6 @@
     line-height: 1.42857143;
     cursor: pointer;
   }
+
+
 </style>
