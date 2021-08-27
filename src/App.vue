@@ -16,7 +16,7 @@
       </div>
       <div class="flex">
         <div><a href="javascript:;" class="file">上传图片<input type="file" @change="getImgUrl"></a></div>
-        <div class="text" style="overflow: hidden;width: 60%">{{uploadImg}}</div>
+        <input class="img_input" type="text" placeholder="请输入媒体地址" v-model="uploadImg">
       </div>
       <div class="flex">
         <div class="button" @click="requestMint">铸造NFT</div>
@@ -24,7 +24,8 @@
       </div>
       <div>
         <div class="button" @click="transferNFT">发送NFT</div>
-        <input class="text_input" type="text" placeholder="请输入接受者帐号" v-model="receiver">
+        <input class="text_input" type="text" placeholder="请输入接受者帐号" v-model="receiverId">
+        <input class="text_input" type="text" placeholder="请输入tokenID" v-model="tokenId">
       </div>
     </div>
   </div>
@@ -56,7 +57,7 @@
         appKeyPrefix: '"near-api-js:keystore:"',
         tokenId:'',
         transactionHashes:'',
-        receiver:''
+        receiverId:''
       };
     },
 
@@ -145,10 +146,10 @@
         //   owner_id: this.accountId
         // });
 
-        this.tokenId = new Date().getTime();
+        const pushId = new Date().getTime();
         await this.contract.nft_mint(
                 {
-                  token_id: `${this.tokenId}`,
+                  token_id: `${pushId}`,
                   token_owner_id: "hiphop200x.testnet",
                   token_metadata:
                           {
@@ -167,8 +168,8 @@
       async transferNFT () {
         const res = await this.contract.nft_transfer(
                 {
-                  token_id: "1630088119860",
-                  receiver_id: "ds119.testnet",
+                  token_id: `${this.tokenId}`,
+                  receiver_id: `${this.receiverId}`,
                   memo: "test"
                 },
                 200000000000000,
@@ -283,6 +284,14 @@
     height: 28px;
     border: 1px solid #DDDDDD;
     margin-left: 20px;
+  }
+
+  .img_input{
+    height: 28px;
+    border: 1px solid #DDDDDD;
+    margin-left: 20px;
+    width: 350px;
+    margin-top: 20px;
   }
 
 
