@@ -24,7 +24,7 @@
       </div>
       <div>
         <div class="button" @click="transferNFT">发送NFT</div>
-        <input class="text_input" type="text" placeholder="请输入接受者帐号">
+        <input class="text_input" type="text" placeholder="请输入接受者帐号" v-model="receiver">
       </div>
     </div>
   </div>
@@ -55,7 +55,8 @@
         uploadImg: 'https://mms.businesswire.com/media/20210512005215/en/877870/23/near_logo.jpg',
         appKeyPrefix: '"near-api-js:keystore:"',
         tokenId:'',
-        transactionHashes:''
+        transactionHashes:'',
+        receiver:''
       };
     },
 
@@ -69,7 +70,6 @@
       if (this.wallet.isSignedIn()) {
         this.accountId = this.wallet.getAccountId();
       }
-
     },
 
 
@@ -108,7 +108,6 @@
           changeMethods: ['new_default_meta','nft_mint','nft_transfer'],
         });
 
-        console.log(this.contract);
         console.log('账户是否登录',this.wallet.isSignedIn());
         console.log('登录账户:',this.wallet.getAccountId());
       },
@@ -147,7 +146,7 @@
         // });
 
         this.tokenId = new Date().getTime();
-        let res = await this.contract.nft_mint(
+        await this.contract.nft_mint(
                 {
                   token_id: `${this.tokenId}`,
                   token_owner_id: "hiphop200x.testnet",
@@ -161,7 +160,6 @@
                 },
                 200000000000000,
                 utils.format.parseNearAmount("0.1")
-
         );
       },
 
@@ -169,11 +167,12 @@
       async transferNFT () {
         const res = await this.contract.nft_transfer(
                 {
-                  token_id: "1630074216185",
+                  token_id: "1630088119860",
                   receiver_id: "ds119.testnet",
                   memo: "test"
                 },
-               utils.format.formatNearAmount("0.000000000000000000000001")
+                200000000000000,
+                utils.format.parseNearAmount("0.000000000000000000000001")
         );
         console.log(res);
       },
@@ -283,7 +282,7 @@
   .text_input{
     height: 28px;
     border: 1px solid #DDDDDD;
-    margin-left: 30px;
+    margin-left: 20px;
   }
 
 
