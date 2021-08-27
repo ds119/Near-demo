@@ -3,7 +3,7 @@
     <div>
       <div class="single-upload">
         <div class="image-box">
-          <img :src="uploadImg" width="400" height="200">
+          <img :src="uploadImg" width="300" height="auto">
         </div>
       </div>
     </div>
@@ -14,21 +14,20 @@
         <div class="text">已绑定账户:{{accountId}}</div>
         <div class="text">账户余额:{{balance}}</div>
       </div>
-      <div>
-        <div class="button">上传图片</div>
-        <input type="file" @change="getImgUrl">
+      <div class="flex">
+        <div><a href="javascript:;" class="file">上传图片<input type="file" @change="getImgUrl"></a></div>
+        <div class="text" style="overflow: hidden;width: 60%">{{uploadImg}}</div>
       </div>
-      <div>
+      <div class="flex">
         <div class="button" @click="requestMint">铸造NFT</div>
+        <div v-if="transactionHashes" class="text"><a :href="'https://explorer.testnet.near.org/transactions/'+transactionHashes" target="_blank">{{transactionHashes}}</a></div>
       </div>
       <div>
         <div class="button" @click="transferNFT">发送NFT</div>
-        <input class="text" type="text">
-        <input class="text" type="text">
+        <input class="text_input" type="text" placeholder="请输入接受者帐号">
       </div>
     </div>
   </div>
-
 </template>
 
 <script>
@@ -38,7 +37,7 @@
     networkId: 'testnet',
     nodeUrl: 'https://rpc.testnet.near.org',
     keyStore: new keyStores.BrowserLocalStorageKeyStore(),
-    contractName: 'dev-1629830646346-20918778741136',
+    contractName: 'hiphop200x.testnet',
     walletUrl: 'https://wallet.testnet.near.org',
     helperUrl: 'https://helper.testnet.near.org',
     explorerUrl: 'https://explorer.testnet.near.org'
@@ -53,23 +52,43 @@
         balance: 0,
         wallet: {},
         contract: {},
-        uploadImg:'https://mms.businesswire.com/media/20210512005215/en/877870/23/near_logo.jpg',
-        appKeyPrefix:'"near-api-js:keystore:"'
+        uploadImg: 'https://mms.businesswire.com/media/20210512005215/en/877870/23/near_logo.jpg',
+        appKeyPrefix: '"near-api-js:keystore:"',
+        tokenId:'',
+        transactionHashes:''
       };
     },
 
     created () {
-      this.initNear()
+      this.initNear();
+      this.transactionHashes = this.getQueryString('transactionHashes');
     },
+
 
     onshow () {
       if (this.wallet.isSignedIn()) {
         this.accountId = this.wallet.getAccountId();
       }
+
     },
 
 
     methods: {
+
+      // 获得交易返回后的TransactionId
+      getQueryString (name) {
+        let reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+        let reg_rewrite = new RegExp('(^|/)' + name + '/([^/]*)(/|$)', 'i');
+        let r = window.location.search.substr(1).match(reg);
+        let q = window.location.pathname.substr(1).match(reg_rewrite);
+        if (r != null) {
+          return unescape(r[2]);
+        } else if (q != null) {
+          return unescape(q[2]);
+        } else {
+          return null;
+        }
+      },
 
       // 初始化 near
       async initNear () {
@@ -84,11 +103,12 @@
         await this.getBalance();
 
         // 获取合约
-        this.contract = new nearAPI.Contract(this.account,'dev-1629830646346-20918778741136', {
+        this.contract = new nearAPI.Contract(this.account,'hiphop200x.testnet', {
           viewMethods: ['nft_metadata'],
           changeMethods: ['new_default_meta','nft_mint','nft_transfer'],
         });
 
+        console.log(this.contract);
         console.log('账户是否登录',this.wallet.isSignedIn());
         console.log('登录账户:',this.wallet.getAccountId());
       },
@@ -120,39 +140,40 @@
 
 
       // 铸造NFT
-      async requestMint(){
-
-        // 初始化合约
+      async requestMint () {
+        // 初始化metaData
         // await this.contract.new_default_meta({
         //   owner_id: this.accountId
         // });
 
-        const res = await this.contract.nft_mint(
+        this.tokenId = new Date().getTime();
+        let res = await this.contract.nft_mint(
                 {
-                  token_id: '1',
-                  token_owner_id: 'dev-1629830646346-20918778741136',
+                  token_id: `${this.tokenId}`,
+                  token_owner_id: "hiphop200x.testnet",
                   token_metadata:
                           {
-                            title: '测试NFT',
-                            description: '测试生成一个NFT',
-                            copies: 1
+                            title: "测试NFT",
+                            description: "测试测试",
+                            copies: 1,
+                            media: this.uploadImg,
                           }
                 },
-                30000000000000
-        );
-        console.log(res);
-      },
+                200000000000000,
+                utils.format.parseNearAmount("0.1")
 
+        );
+      },
 
       // 传输NFT
       async transferNFT () {
         const res = await this.contract.nft_transfer(
                 {
-                  token_id: '1',
-                  receiver_id: '',
-                  memo: ''
+                  token_id: "1630074216185",
+                  receiver_id: "ds119.testnet",
+                  memo: "test"
                 },
-                0.000000000000000000000001
+               utils.format.formatNearAmount("0.000000000000000000000001")
         );
         console.log(res);
       },
@@ -232,6 +253,37 @@
     font-weight: 400;
     line-height: 1.42857143;
     cursor: pointer;
+  }
+
+
+  .file {
+    position: relative;
+    display: inline-block;
+    background: #fff;
+    border-color: #fff;
+    box-shadow: 0 0 2px rgba(0,0,0,.12), 0 2px 2px rgba(0,0,0,.2);
+    border-radius: 2px;
+    padding: 6px 12px;
+    overflow: hidden;
+    font-size: 14px;
+    color: #212121;
+    text-decoration: none;
+    text-indent: 0;
+    line-height: 1.42857143;
+    cursor: pointer;
+  }
+  .file input {
+    position: absolute;
+    font-size: 100px;
+    right: 0;
+    top: 0;
+    opacity: 0;
+  }
+
+  .text_input{
+    height: 28px;
+    border: 1px solid #DDDDDD;
+    margin-left: 30px;
   }
 
 
