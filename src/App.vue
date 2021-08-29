@@ -66,26 +66,20 @@
       this.transactionHashes = this.getQueryString('transactionHashes');
     },
 
-
-    onshow () {
+    mounted () {
       if (this.wallet.isSignedIn()) {
         this.accountId = this.wallet.getAccountId();
       }
     },
-
 
     methods: {
 
       // 获得交易返回后的TransactionId
       getQueryString (name) {
         let reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
-        let reg_rewrite = new RegExp('(^|/)' + name + '/([^/]*)(/|$)', 'i');
         let r = window.location.search.substr(1).match(reg);
-        let q = window.location.pathname.substr(1).match(reg_rewrite);
         if (r != null) {
           return unescape(r[2]);
-        } else if (q != null) {
-          return unescape(q[2]);
         } else {
           return null;
         }
@@ -119,7 +113,7 @@
         await this.wallet.requestSignIn(
                 this.contractName,
                 'Near Demo',
-                'http://localhost:8080/'
+                'http://localhost:8081/'
         );
       },
 
@@ -290,7 +284,7 @@
     height: 28px;
     border: 1px solid #DDDDDD;
     margin-left: 20px;
-    width: 350px;
+    width: 360px;
     margin-top: 20px;
   }
 
