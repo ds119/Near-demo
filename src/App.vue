@@ -113,7 +113,7 @@
         await this.wallet.requestSignIn(
                 this.contractName,
                 'Near Demo',
-                'http://localhost:8081/'
+                'http://localhost:8080/'
         );
       },
 
@@ -164,10 +164,10 @@
                 {
                   token_id: `${this.tokenId}`,
                   receiver_id: `${this.receiverId}`,
-                  memo: "test"
+                  memo: 'test'
                 },
                 200000000000000,
-                utils.format.parseNearAmount("0.000000000000000000000001")
+                utils.format.parseNearAmount('0.000000000000000000000001')
         );
         console.log(res);
       },
